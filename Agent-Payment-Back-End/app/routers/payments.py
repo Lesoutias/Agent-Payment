@@ -5,6 +5,7 @@ from app.models import Payment, Agent
 from app.schemas import PaymentCreate, PaymentOut
 from app.deps import get_current_user
 from typing import List
+from datetime import date
 
 router = APIRouter(
     prefix="/payments",
@@ -20,7 +21,7 @@ def get_db():
         db.close()
 
 
-# ✅ CREATE payment
+# ✅ CREATE payment - FIXED
 @router.post("/", response_model=PaymentOut)
 def create_payment(
     payment: PaymentCreate,
@@ -35,6 +36,7 @@ def create_payment(
     new_payment = Payment(
         amount=payment.amount,
         status=payment.status,
+        payment_date=payment.payment_date,  # ← ADDED
         agent_id=payment.agent_id
     )
 
@@ -45,13 +47,22 @@ def create_payment(
     return new_payment
 
 
-# ✅ READ all payments
+# # ✅ READ all payments - WITH VALIDATION
 @router.get("/", response_model=List[PaymentOut])
 def get_payments(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    return db.query(Payment).all()
+    payments = db.query(Payment).all()
+    
+    # Debug: Check for NULL dates
+    for payment in payments:
+        if payment.payment_date is None:
+            print(f"WARNING: Payment ID {payment.id} has NULL payment_date")
+            # Optionally set a default
+            payment.payment_date = date.today()
+    
+    return payments
 
 
 # ✅ READ one payment
@@ -67,7 +78,7 @@ def get_payment(
     return payment
 
 
-# ✅ UPDATE payment
+# ✅ UPDATE payment - FIXED
 @router.put("/{payment_id}", response_model=PaymentOut)
 def update_payment(
     payment_id: int,
@@ -81,6 +92,7 @@ def update_payment(
 
     db_payment.amount = payment.amount
     db_payment.status = payment.status
+    db_payment.payment_date = payment.payment_date  # ← ADDED
     db_payment.agent_id = payment.agent_id
 
     db.commit()
@@ -105,3 +117,21 @@ def delete_payment(
 
     return {"message": "Payment deleted successfully"}
 
+# Add to payments.py for debugging
+@router.get("/debug/payments")
+def debug_payments(db: Session = Depends(get_db)):
+    """Debug endpoint to see raw payment data"""
+    payments = db.query(Payment).all()
+    
+    result = []
+    for payment in payments:
+        result.append({
+            "id": payment.id,
+            "amount": payment.amount,
+            "payment_date": str(payment.payment_date),  # Convert to string
+            "payment_date_is_none": payment.payment_date is None,
+            "status": payment.status,
+            "agent_id": payment.agent_id
+        })
+    
+    return {"payments": result, "count": len(payments)}

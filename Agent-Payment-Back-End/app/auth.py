@@ -15,7 +15,7 @@ def verify_password(password, hashed):
 
 def create_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=2)
+    expire = datetime.utcnow() + timedelta(hours=2000)
     to_encode.update({
         "exp": int(expire.timestamp()),
         "iat": int(datetime.utcnow().timestamp())
