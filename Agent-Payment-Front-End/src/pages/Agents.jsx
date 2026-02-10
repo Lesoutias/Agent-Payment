@@ -1,7 +1,7 @@
 function Agents() {
     return (
         <div>
-            
+            Agent
         </div>
     )
 }
