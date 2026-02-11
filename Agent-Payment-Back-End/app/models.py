@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
 from app.database import Base
 
 class User(Base):
@@ -14,6 +14,7 @@ class Agent(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     role = Column(String)
+    salary = Column(Float, default=0.0)
 
 
 class Payment(Base):
@@ -21,4 +22,5 @@ class Payment(Base):
     id = Column(Integer, primary_key=True)
     amount = Column(Float)
     status = Column(String)
+    payment_date = Column(Date, nullable=True)
     agent_id = Column(Integer, ForeignKey("agents.id"))

@@ -1,4 +1,5 @@
 # app/schemas.py
+from typing import Optional
 from pydantic import BaseModel
 from datetime import date
 
@@ -12,6 +13,7 @@ class LoginSchema(BaseModel):
 class AgentCreate(BaseModel):
     name: str
     role: str
+    salary: float = 0.0
 
 class AgentOut(AgentCreate):
     id: int
@@ -24,10 +26,11 @@ class AgentOut(AgentCreate):
 class PaymentCreate(BaseModel):
     agent_id: int
     amount: float
-    payment_date: date
+    payment_date: Optional[date] = None
+    status: Optional[str] = None
 
 class PaymentOut(PaymentCreate):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
