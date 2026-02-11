@@ -13,6 +13,7 @@ class LoginSchema(BaseModel):
 class AgentCreate(BaseModel):
     name: str
     role: str
+    salary: float = 0.0
 
 class AgentOut(AgentCreate):
     id: int

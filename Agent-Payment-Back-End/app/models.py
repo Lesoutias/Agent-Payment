@@ -14,6 +14,7 @@ class Agent(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     role = Column(String)
+    salary = Column(Float, default=0.0)
 
 
 class Payment(Base):

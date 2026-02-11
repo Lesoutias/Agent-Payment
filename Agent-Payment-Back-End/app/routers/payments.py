@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Payment, Agent
@@ -32,6 +32,18 @@ def create_payment(
     agent = db.query(Agent).filter(Agent.id == payment.agent_id).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
+
+    # Check for duplicate payment in the same month
+    if payment.payment_date:
+        from sqlalchemy import extract
+        existing_payment = db.query(Payment).filter(
+            Payment.agent_id == payment.agent_id,
+            extract('month', Payment.payment_date) == payment.payment_date.month,
+            extract('year', Payment.payment_date) == payment.payment_date.year
+        ).first()
+
+        if existing_payment:
+             raise HTTPException(status_code=400, detail="Payment already exists for this agent in this month")
 
     new_payment = Payment(
         amount=payment.amount,
@@ -135,3 +147,20 @@ def debug_payments(db: Session = Depends(get_db)):
         })
     
     return {"payments": result, "count": len(payments)}
+
+
+# ✅ PATCH payment status
+@router.patch("/{payment_id}/status")
+def update_payment_status(
+    payment_id: int,
+    status: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    payment.status = status
+    db.commit()
+    return {"message": "Status updated successfully", "status": status}
