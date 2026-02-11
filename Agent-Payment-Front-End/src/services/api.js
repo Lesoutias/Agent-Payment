@@ -16,7 +16,7 @@ api.interceptors.request.use((config) => {
   
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log("✅ Authorization header set");
+    // console.log("✅ Authorization header set");
     
     // Debug: Show token expiry
     try {
